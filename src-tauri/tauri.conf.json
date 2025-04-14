@@ -3,6 +3,8 @@
   "productName": "nexusvpnweb",
   "version": "0.1.0",
   "identifier": "com.nexusvpnweb.app",
+  
+
   "build": {
     "beforeDevCommand": "npm run dev",
     "devUrl": "http://localhost:1420",

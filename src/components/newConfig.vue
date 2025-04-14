@@ -1,26 +1,40 @@
 <script setup>
 import { ref } from 'vue';
-
+import drag_and_drop from './drag_and_drop.vue';
+import { invoke } from '@tauri-apps/api/core';
 const configName = ref('');
-const selectedProtocol = ref('');
-const isDragging = ref(false);
+const selectedProtocol = ref('wireguard');
+const vless_data = ref('')
 
-const handleDragOver = (e) => {
-  e.preventDefault();
-  isDragging.value = true;
+const is_show_drag_and_drop = ref(true)
+
+const handleFileUpload = (content) => {
+  fileContent.value = content;
 };
 
-const handleDragLeave = () => {
-  isDragging.value = false;
+const handleProtocol = () => {
+  if (selectedProtocol.value === "openvpn"){
+    is_show_drag_and_drop.value = true
+  } 
+  else if (selectedProtocol.value === "wireguard"){
+    is_show_drag_and_drop.value = true
+  } 
+  else if (selectedProtocol.value === "vless"){
+    is_show_drag_and_drop.value = false
+  } 
+
+}
+const saveConfig = async () => {
+  console.log('Папка .nexus создана!');
+  try {
+    await invoke('create_nexus_dir');
+    console.log('Папка .nexus создана!');
+  } catch (err) {
+    console.error('Ошибка:', err);
+  }
 };
 
-const handleDrop = (e) => {
-  e.preventDefault();
-  isDragging.value = false;
-  const files = e.dataTransfer.files;
-  console.log(files)
 
-};
 </script>
 
 <template>
@@ -40,27 +54,30 @@ const handleDrop = (e) => {
 
       <div class="form-group">
         <label>Protocol</label>
-        <select v-model="selectedProtocol" class="select-field">
+        <select v-model="selectedProtocol" class="select-field" @change="handleProtocol">
       
           <option value="wireguard">WireGuard</option>
           <option value="openvpn">OpenVPN</option>
           <option value="vless">VLESS</option>
         </select>
-      </div>
 
-      <div 
-        class="drop-zone"
-        :class="{ 'dragging': isDragging }"
-        @dragover="handleDragOver"
-        @dragleave="handleDragLeave"
-        @drop="handleDrop"
-      >
-        <div class="drop-content">
-          <svg class="upload-icon" viewBox="0 0 24 24">
-            <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"/>
-          </svg>
-          <span>Drag and drop config file or click to upload</span>
-        </div>
+       
+      </div>
+      <div class="form-group">
+        <label v-if="!is_show_drag_and_drop" >VLESS data</label>
+      <input 
+          v-model="vless_data" 
+          type="text" 
+          placeholder="vless" 
+          class="input-field"
+        v-if="!is_show_drag_and_drop">
+
+        
+      </div>
+      <drag_and_drop v-if="is_show_drag_and_drop"  @file-uploaded="handleFileUpload"/>
+      
+      <div class="save_config" @click="saveConfig">
+        <span>Save configuration</span>
       </div>
 
     </div>
@@ -131,38 +148,17 @@ const handleDrop = (e) => {
       }
     }
 
-    .drop-zone {
-      flex: 1;
-      border: 2px dashed #404060;
-      border-radius: 8px;
-      padding: 2rem;
+    .save_config {
+      margin-top:40px ;
+      width: 100%;
+      height: 4vh; 
+      background-color: #717CE0;
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: all 0.3s;
-      background-color: rgba(64, 64, 96, 0.1);
+      color: white;
+      border-radius: 5px;
       cursor: pointer;
-
-      &.dragging {
-        border-color: #6464FF;
-        background-color: rgba(100, 100, 255, 0.1);
-      }
-
-      .drop-content {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 1rem;
-        color: #A0A0C0;
-        text-align: center;
-
-        .upload-icon {
-          width: 48px;
-          height: 48px;
-          fill: #6464FF;
-          opacity: 0.8;
-        }
-      }
     }
   }
 }
