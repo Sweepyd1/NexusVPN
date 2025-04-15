@@ -24,7 +24,7 @@ const handleProtocol = () => {
   } 
 
 }
-const saveConfig = async () => {
+const create_nexus_dir = async () => {
   console.log('Папка .nexus создана!');
   try {
     await invoke('create_nexus_dir');
@@ -34,6 +34,43 @@ const saveConfig = async () => {
   }
 };
 
+const saveConfig = async () => {
+  if (selectedProtocol.value === 'vless') {
+    if (!configName.value || !vless_data.value) {
+      alert('Заполните все поля!');
+      return;
+    }
+    
+    try {
+      await invoke('save_vless_config', {
+        name: configName.value,
+        vlessData: vless_data.value
+      });
+      console.log('Конфиг сохранен!');
+      emit('close');
+    } catch (err) {
+      console.error('Ошибка:', err);
+    }
+  } else {
+ 
+    create_nexus_dir();
+  }
+};
+const startVPN = async () => {
+  if (!configName.value) {
+    alert('Выберите конфигурацию!');
+    return;
+  }
+  
+  try {
+    const result = await invoke('start_vless', { configName: configName.value });
+    console.log(result);
+    alert('VPN запущен!');
+  } catch (err) {
+    console.error(err);
+    alert('Ошибка: ' + err);
+  }
+};
 
 </script>
 
@@ -63,14 +100,14 @@ const saveConfig = async () => {
 
        
       </div>
-      <div class="form-group">
-        <label v-if="!is_show_drag_and_drop" >VLESS data</label>
+      <div class="form-group" v-if="!is_show_drag_and_drop">
+        <label >VLESS data</label>
       <input 
           v-model="vless_data" 
           type="text" 
           placeholder="vless" 
           class="input-field"
-        v-if="!is_show_drag_and_drop">
+        >
 
         
       </div>
@@ -82,6 +119,11 @@ const saveConfig = async () => {
 
     </div>
   </div>
+
+    
+
+
+
 </template>
 
 <style scoped lang="scss">
